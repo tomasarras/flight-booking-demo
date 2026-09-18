@@ -1,14 +1,9 @@
+import Link from "next/link";
 import SearchForm from "@/components/SearchForm";
-import { AIRPORTS } from "@/lib/airports";
-import { ShieldCheck, Sparkles, Tag } from "lucide-react";
-
-const FEATURED = ["MDZ", "BRC", "SCL", "GRU", "MIA", "MAD"];
+import PriceMapExplorer from "@/components/PriceMapExplorer";
+import { MapPin, ShieldCheck, Sparkles, Tag } from "lucide-react";
 
 export default function HomePage() {
-  const destinations = FEATURED.map((code) => AIRPORTS.find((a) => a.code === code)).filter(
-    Boolean
-  );
-
   return (
     <div>
       <section className="bg-gradient-to-b from-sky-600 to-sky-700">
@@ -50,17 +45,20 @@ export default function HomePage() {
         </div>
 
         <div className="mt-12">
-          <h2 className="text-lg font-semibold text-slate-900">Destinos populares</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
-            {destinations.map((d) => (
-              <div
-                key={d.code}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-center"
-              >
-                <p className="text-sm font-semibold text-slate-900">{d.city}</p>
-                <p className="text-xs text-slate-400">{d.code}</p>
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-lg font-semibold text-slate-900">
+              <MapPin size={18} className="text-sky-600" />
+              Mapa de precios
+            </h2>
+            <Link href="/map" className="text-sm font-medium text-sky-600 hover:underline">
+              Ver pantalla completa
+            </Link>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Precio estimado más barato a cada destino, elegí origen y fecha.
+          </p>
+          <div className="mt-4">
+            <PriceMapExplorer heightClass="h-[420px]" />
           </div>
         </div>
       </div>

@@ -17,6 +17,9 @@ export default function Header() {
           <Link href="/" className="hover:text-slate-900">
             Buscar vuelos
           </Link>
+          <Link href="/map" className="hover:text-slate-900">
+            Mapa de precios
+          </Link>
           <Link href="/my-bookings" className="hover:text-slate-900">
             Mis reservas
           </Link>

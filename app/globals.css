@@ -16,3 +16,15 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Strip Leaflet's default tooltip chrome so price badges on the map render
+   as plain custom-styled pills instead of inside a white bordered box. */
+.price-tooltip {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+.price-tooltip::before {
+  display: none;
+}
