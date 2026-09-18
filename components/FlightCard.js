@@ -1,12 +1,24 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Luggage, PlaneTakeoff } from "lucide-react";
+import { Loader2, Luggage, PlaneTakeoff } from "lucide-react";
 import { findAirline } from "@/lib/airlines";
 import { formatDuration, formatPrice } from "@/lib/format";
+import { randomDelay } from "@/lib/delay";
 
 export default function FlightCard({ flight, selected, onSelect }) {
+  const [selecting, setSelecting] = useState(false);
   const airline = findAirline(flight.airlineId);
   const stopsLabel =
     flight.stops === 0 ? "Directo" : `${flight.stops} escala${flight.stops > 1 ? "s" : ""}`;
+
+  async function handleSelect() {
+    setSelecting(true);
+    await randomDelay();
+    onSelect();
+    setSelecting(false);
+  }
 
   return (
     <div
@@ -71,14 +83,16 @@ export default function FlightCard({ flight, selected, onSelect }) {
           </Link>
           <button
             type="button"
-            onClick={onSelect}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+            onClick={handleSelect}
+            disabled={selecting}
+            className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70 ${
               selected
                 ? "bg-sky-600 text-white"
                 : "bg-slate-900 text-white hover:bg-sky-600"
             }`}
           >
-            {selected ? "Seleccionado" : "Seleccionar"}
+            {selecting && <Loader2 size={14} className="animate-spin" />}
+            {selecting ? "Seleccionando…" : selected ? "Seleccionado" : "Seleccionar"}
           </button>
         </div>
       </div>

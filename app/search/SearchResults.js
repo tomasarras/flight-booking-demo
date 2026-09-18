@@ -3,13 +3,14 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { SlidersHorizontal } from "lucide-react";
+import { Loader2, SlidersHorizontal } from "lucide-react";
 import SearchForm from "@/components/SearchForm";
 import FlightCard from "@/components/FlightCard";
 import FiltersPanel from "@/components/FiltersPanel";
 import { generateFlights } from "@/lib/flights";
 import { airportLabel } from "@/lib/airports";
 import { formatDateLong, formatPrice } from "@/lib/format";
+import { randomDelay } from "@/lib/delay";
 
 function applyFilters(flights, filters) {
   let list = flights.filter((f) => {
@@ -61,6 +62,7 @@ export default function SearchResults() {
   const [filters, setFilters] = useState(defaultFilters);
   const [selectedOut, setSelectedOut] = useState(null);
   const [selectedIn, setSelectedIn] = useState(null);
+  const [continuing, setContinuing] = useState(false);
 
   const maxPrice = useMemo(() => {
     const all = [...outboundFlights, ...returnFlights];
@@ -81,7 +83,9 @@ export default function SearchResults() {
   const readyToContinue = Boolean(outFlight) && (tripType !== "roundtrip" || Boolean(inFlight));
   const totalPrice = ((outFlight?.price || 0) + (inFlight?.price || 0)) * passengers;
 
-  function continueToBooking() {
+  async function continueToBooking() {
+    setContinuing(true);
+    await randomDelay();
     const params = new URLSearchParams({
       tripType,
       out: selectedOut,
@@ -178,9 +182,11 @@ export default function SearchResults() {
             <button
               type="button"
               onClick={continueToBooking}
-              className="rounded-lg bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-sky-700"
+              disabled={continuing}
+              className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Continuar
+              {continuing && <Loader2 size={14} className="animate-spin" />}
+              {continuing ? "Confirmando…" : "Continuar"}
             </button>
           </div>
         </div>

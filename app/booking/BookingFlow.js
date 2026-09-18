@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, ShieldAlert } from "lucide-react";
+import { Loader2, Lock, ShieldAlert } from "lucide-react";
 import { getFlightById, generateSeatMap } from "@/lib/flights";
 import { findAirline } from "@/lib/airlines";
 import { airportLabel } from "@/lib/airports";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { generateBookingRef, saveBooking } from "@/lib/booking";
+import { randomDelay } from "@/lib/delay";
 import StepIndicator from "@/components/StepIndicator";
 import PassengerForm from "@/components/PassengerForm";
 import SeatMap from "@/components/SeatMap";
@@ -40,6 +41,7 @@ export default function BookingFlow() {
   const [payment, setPayment] = useState({ name: "", number: "", expiry: "", cvv: "" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const seatMapOut = useMemo(() => (outFlight ? generateSeatMap(outFlight.id) : []), [outFlight]);
   const seatMapIn = useMemo(() => (inFlight ? generateSeatMap(inFlight.id) : []), [inFlight]);
@@ -67,7 +69,7 @@ export default function BookingFlow() {
     );
   }
 
-  function goToStep2() {
+  async function goToStep2() {
     const incomplete = passengers.some(
       (p) => !p.firstName || !p.lastName || !p.document || !p.birthDate
     );
@@ -76,19 +78,25 @@ export default function BookingFlow() {
       return;
     }
     setError("");
+    setSubmitting(true);
+    await randomDelay();
+    setSubmitting(false);
     setStep(2);
   }
 
-  function goToStep3() {
+  async function goToStep3() {
     if (seatsOut.length < passengerCount || (inFlight && seatsIn.length < passengerCount)) {
       setError("Seleccioná un asiento por pasajero en cada tramo.");
       return;
     }
     setError("");
+    setSubmitting(true);
+    await randomDelay();
+    setSubmitting(false);
     setStep(3);
   }
 
-  function confirmBooking(e) {
+  async function confirmBooking(e) {
     e.preventDefault();
     if (!payment.name || !payment.number || !payment.expiry || !payment.cvv) {
       setError("Completá los datos de pago simulados.");
@@ -99,6 +107,8 @@ export default function BookingFlow() {
       return;
     }
     setError("");
+    setSubmitting(true);
+    await randomDelay();
 
     const booking = {
       id: generateBookingRef(),
@@ -135,8 +145,10 @@ export default function BookingFlow() {
               <button
                 type="button"
                 onClick={goToStep2}
-                className="w-full rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 sm:w-auto sm:px-8"
+                disabled={submitting}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:px-8"
               >
+                {submitting && <Loader2 size={14} className="animate-spin" />}
                 Continuar a selección de asientos
               </button>
             </div>
@@ -175,15 +187,18 @@ export default function BookingFlow() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  disabled={submitting}
+                  className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   Atrás
                 </button>
                 <button
                   type="button"
                   onClick={goToStep3}
-                  className="flex-1 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 sm:flex-none sm:px-8"
+                  disabled={submitting}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70 sm:flex-none sm:px-8"
                 >
+                  {submitting && <Loader2 size={14} className="animate-spin" />}
                   Continuar al pago
                 </button>
               </div>
@@ -267,16 +282,18 @@ export default function BookingFlow() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  disabled={submitting}
+                  className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   Atrás
                 </button>
                 <button
                   type="submit"
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 sm:flex-none sm:px-8"
+                  disabled={submitting}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70 sm:flex-none sm:px-8"
                 >
-                  <Lock size={14} />
-                  Confirmar reserva simulada
+                  {submitting ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
+                  {submitting ? "Confirmando…" : "Confirmar reserva simulada"}
                 </button>
               </div>
             </form>

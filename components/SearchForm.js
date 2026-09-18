@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, Minus, Plus, Search } from "lucide-react";
+import { ArrowLeftRight, Loader2, Minus, Plus, Search } from "lucide-react";
 import { AIRPORTS } from "@/lib/airports";
+import { randomDelay } from "@/lib/delay";
+import FareDatePicker from "@/components/FareDatePicker";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -19,23 +21,35 @@ export default function SearchForm({ initial = {} }) {
   const [passengers, setPassengers] = useState(Number(initial.passengers) || 1);
   const [cabin, setCabin] = useState(initial.cabin || "economy");
   const [error, setError] = useState("");
+  const [searching, setSearching] = useState(false);
 
   function swapAirports() {
     setOrigin(destination);
     setDestination(origin);
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (origin === destination) {
       setError("El origen y el destino no pueden ser el mismo aeropuerto.");
       return;
     }
-    if (tripType === "roundtrip" && returnDate && returnDate < departDate) {
+    if (!departDate) {
+      setError("Elegí la fecha de ida.");
+      return;
+    }
+    if (tripType === "roundtrip" && !returnDate) {
+      setError("Elegí la fecha de vuelta.");
+      return;
+    }
+    if (tripType === "roundtrip" && returnDate < departDate) {
       setError("La fecha de vuelta no puede ser anterior a la de ida.");
       return;
     }
     setError("");
+
+    setSearching(true);
+    await randomDelay();
 
     const params = new URLSearchParams({
       tripType,
@@ -151,31 +165,22 @@ export default function SearchForm({ initial = {} }) {
           </div>
         </div>
 
-        <div className={tripType === "roundtrip" ? "md:col-span-4" : "md:col-span-8"}>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Fecha de ida</label>
-          <input
-            type="date"
-            min={todayISO()}
-            value={departDate}
-            onChange={(e) => setDepartDate(e.target.value)}
-            required
-            className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        <div className="md:col-span-8">
+          <label className="block text-xs font-medium text-slate-500 mb-1">
+            {tripType === "roundtrip" ? "Fechas de ida y vuelta" : "Fecha de ida"}
+          </label>
+          <FareDatePicker
+            mode={tripType === "roundtrip" ? "range" : "single"}
+            originCode={origin}
+            destinationCode={destination}
+            startDate={departDate}
+            endDate={returnDate}
+            onChange={({ startDate, endDate }) => {
+              setDepartDate(startDate);
+              if (tripType === "roundtrip") setReturnDate(endDate || "");
+            }}
           />
         </div>
-
-        {tripType === "roundtrip" && (
-          <div className="md:col-span-4">
-            <label className="block text-xs font-medium text-slate-500 mb-1">Fecha de vuelta</label>
-            <input
-              type="date"
-              min={departDate || todayISO()}
-              value={returnDate}
-              onChange={(e) => setReturnDate(e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
-          </div>
-        )}
 
         <div className="md:col-span-4">
           <label className="block text-xs font-medium text-slate-500 mb-1">Clase</label>
@@ -194,10 +199,20 @@ export default function SearchForm({ initial = {} }) {
 
       <button
         type="submit"
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 md:w-auto md:px-8"
+        disabled={searching}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70 md:w-auto md:px-8"
       >
-        <Search size={16} />
-        Buscar vuelos
+        {searching ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Buscando…
+          </>
+        ) : (
+          <>
+            <Search size={16} />
+            Buscar vuelos
+          </>
+        )}
       </button>
     </form>
   );
