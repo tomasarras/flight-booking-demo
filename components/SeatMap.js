@@ -1,8 +1,11 @@
 "use client";
 
+import { useLanguage } from "@/components/LanguageProvider";
+
 const COLS = ["A", "B", "C", "D", "E", "F"];
 
 export default function SeatMap({ seats, selected, onToggle, maxSelectable }) {
+  const { t } = useLanguage();
   const rows = [...new Set(seats.map((s) => s.code.match(/\d+/)[0]))].sort(
     (a, b) => Number(a) - Number(b)
   );
@@ -10,9 +13,9 @@ export default function SeatMap({ seats, selected, onToggle, maxSelectable }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
       <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-        <LegendDot className="bg-white ring-1 ring-slate-300" label="Disponible" />
-        <LegendDot className="bg-sky-600" label="Seleccionado" />
-        <LegendDot className="bg-slate-300" label="Ocupado" />
+        <LegendDot className="bg-white ring-1 ring-slate-300" label={t("seatmap_available")} />
+        <LegendDot className="bg-sky-600" label={t("seatmap_selected")} />
+        <LegendDot className="bg-slate-300" label={t("seatmap_occupied")} />
       </div>
 
       <div className="mx-auto max-w-xs space-y-1.5">

@@ -5,13 +5,13 @@ import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import { AIRPORTS, findAirport } from "@/lib/airports";
 import { buildDestinationFares } from "@/lib/priceMap";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const PriceMap = dynamic(() => import("@/components/PriceMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center gap-2 text-slate-400">
+    <div className="flex h-full items-center justify-center text-slate-400">
       <Loader2 className="animate-spin" size={18} />
-      Cargando mapa…
     </div>
   ),
 });
@@ -24,6 +24,7 @@ function todayISO() {
 }
 
 export default function PriceMapExplorer({ heightClass = "h-[520px]", defaultOrigin = "EZE" }) {
+  const { t } = useLanguage();
   const [originCode, setOriginCode] = useState(defaultOrigin);
   const [date, setDate] = useState(todayISO());
 
@@ -37,7 +38,7 @@ export default function PriceMapExplorer({ heightClass = "h-[520px]", defaultOri
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="sm:w-64">
-          <label className="block text-xs font-medium text-slate-500 mb-1">Origen</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">{t("map_origin")}</label>
           <select
             value={originCode}
             onChange={(e) => setOriginCode(e.target.value)}
@@ -51,7 +52,7 @@ export default function PriceMapExplorer({ heightClass = "h-[520px]", defaultOri
           </select>
         </div>
         <div className="sm:w-52">
-          <label className="block text-xs font-medium text-slate-500 mb-1">Fecha</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">{t("map_date")}</label>
           <input
             type="date"
             min={todayISO()}
@@ -67,10 +68,10 @@ export default function PriceMapExplorer({ heightClass = "h-[520px]", defaultOri
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-        <Legend color="bg-emerald-500" label="Económico" />
-        <Legend color="bg-amber-500" label="Medio" />
-        <Legend color="bg-rose-500" label="Caro" />
-        <Legend color="bg-slate-900" label="Tu origen" />
+        <Legend color="bg-emerald-500" label={t("map_price_level_cheap")} />
+        <Legend color="bg-amber-500" label={t("map_price_level_mid")} />
+        <Legend color="bg-rose-500" label={t("map_price_level_high")} />
+        <Legend color="bg-slate-900" label={t("map_your_origin")} />
       </div>
     </div>
   );

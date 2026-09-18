@@ -7,8 +7,10 @@ import { getAllBookings } from "@/lib/booking";
 import { findAirline } from "@/lib/airlines";
 import { airportLabel } from "@/lib/airports";
 import { formatDateLong, formatPrice } from "@/lib/format";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function MyBookingsPage() {
+  const { t, lang } = useLanguage();
   const [bookings, setBookings] = useState(null);
 
   useEffect(() => {
@@ -20,17 +22,15 @@ export default function MyBookingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Mis reservas</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Guardadas solo en este navegador — es una demo sin backend ni base de datos.
-      </p>
+      <h1 className="text-2xl font-bold text-slate-900">{t("bookings_title")}</h1>
+      <p className="mt-1 text-sm text-slate-500">{t("bookings_subtitle")}</p>
 
       {bookings === null ? null : bookings.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center">
           <Ticket className="mx-auto text-slate-300" size={32} />
-          <p className="mt-3 text-slate-500">Todavía no hiciste ninguna reserva.</p>
+          <p className="mt-3 text-slate-500">{t("bookings_empty")}</p>
           <Link href="/" className="mt-4 inline-block text-sm font-semibold text-sky-600 underline">
-            Buscar vuelos
+            {t("nav_search")}
           </Link>
         </div>
       ) : (
@@ -56,15 +56,15 @@ export default function MyBookingsPage() {
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
                         {airportLabel(first.originCode)} → {airportLabel(first.destinationCode)}
-                        {isRoundTrip && <span className="text-slate-400"> · ida y vuelta</span>}
+                        {isRoundTrip && <span className="text-slate-400"> · {t("bookings_roundtrip_tag")}</span>}
                       </p>
                       <p className="text-xs text-slate-400">
-                        Código {booking.id} · {formatDateLong(first.date)}
+                        {t("confirmation_code")} {booking.id} · {formatDateLong(first.date, lang)}
                       </p>
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-slate-900">
-                    {formatPrice(booking.totalPrice)}
+                    {formatPrice(booking.totalPrice, lang)}
                   </p>
                 </div>
               </Link>

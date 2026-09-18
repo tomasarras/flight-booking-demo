@@ -7,8 +7,10 @@ import { getBooking } from "@/lib/booking";
 import { findAirline } from "@/lib/airlines";
 import { airportLabel } from "@/lib/airports";
 import { formatDateLong, formatDuration, formatPrice } from "@/lib/format";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function ConfirmationClient({ bookingId }) {
+  const { t, lang } = useLanguage();
   const [booking, setBooking] = useState(undefined);
 
   useEffect(() => {
@@ -19,19 +21,16 @@ export default function ConfirmationClient({ bookingId }) {
   }, [bookingId]);
 
   if (booking === undefined) {
-    return <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center text-slate-400">Cargando…</div>;
+    return <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center text-slate-400">…</div>;
   }
 
   if (!booking) {
     return (
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center text-slate-500">
-        <p>No encontramos esta reserva en este navegador.</p>
-        <p className="mt-1 text-sm text-slate-400">
-          Las reservas de esta demo se guardan solo localmente y no son visibles desde otro
-          dispositivo o navegador.
-        </p>
+        <p>{t("confirmation_not_found")}</p>
+        <p className="mt-1 text-sm text-slate-400">{t("confirmation_not_found_hint")}</p>
         <Link href="/" className="mt-4 inline-block text-sky-600 underline">
-          Volver al inicio
+          {t("common_back_to_home")}
         </Link>
       </div>
     );
@@ -43,9 +42,10 @@ export default function ConfirmationClient({ bookingId }) {
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
           <CheckCircle2 size={28} />
         </span>
-        <h1 className="mt-4 text-2xl font-bold text-slate-900">Reserva simulada confirmada</h1>
+        <h1 className="mt-4 text-2xl font-bold text-slate-900">{t("confirmation_title")}</h1>
         <p className="mt-1 text-slate-500">
-          Código de reserva <span className="font-mono font-semibold text-slate-900">{booking.id}</span>
+          {t("confirmation_code")}{" "}
+          <span className="font-mono font-semibold text-slate-900">{booking.id}</span>
         </p>
       </div>
 
@@ -64,10 +64,12 @@ export default function ConfirmationClient({ bookingId }) {
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{airline.name}</p>
-                    <p className="text-xs text-slate-400">Vuelo {flight.flightNumber}</p>
+                    <p className="text-xs text-slate-400">
+                      {t("flight_number")} {flight.flightNumber}
+                    </p>
                   </div>
                 </div>
-                <p className="text-xs text-slate-400">{formatDateLong(flight.date)}</p>
+                <p className="text-xs text-slate-400">{formatDateLong(flight.date, lang)}</p>
               </div>
 
               <div className="mt-4 flex items-center justify-between">
@@ -83,24 +85,27 @@ export default function ConfirmationClient({ bookingId }) {
               </div>
 
               <p className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
-                Asientos: <span className="font-medium text-slate-700">{flight.seats.join(", ")}</span>
+                {t("confirmation_seats")}{" "}
+                <span className="font-medium text-slate-700">{flight.seats.join(", ")}</span>
               </p>
             </div>
           );
         })}
 
         <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Pasajeros</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+            {t("confirmation_passengers")}
+          </p>
           <ul className="mt-2 space-y-1 text-sm text-slate-700">
             {booking.passengers.map((p, idx) => (
               <li key={idx}>
-                {p.firstName} {p.lastName} · Doc. {p.document}
+                {p.firstName} {p.lastName} · {t("booking_document")}: {p.document}
               </li>
             ))}
           </ul>
           <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-            <span className="text-sm font-medium text-slate-600">Total pagado (simulado)</span>
-            <span className="text-xl font-bold text-slate-900">{formatPrice(booking.totalPrice)}</span>
+            <span className="text-sm font-medium text-slate-600">{t("confirmation_total_paid")}</span>
+            <span className="text-xl font-bold text-slate-900">{formatPrice(booking.totalPrice, lang)}</span>
           </div>
         </div>
       </div>
@@ -110,13 +115,13 @@ export default function ConfirmationClient({ bookingId }) {
           href="/my-bookings"
           className="flex-1 rounded-lg bg-slate-900 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800"
         >
-          Ver mis reservas
+          {t("confirmation_view_bookings")}
         </Link>
         <Link
           href="/"
           className="flex-1 rounded-lg border border-slate-200 py-3 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50"
         >
-          Buscar otro vuelo
+          {t("confirmation_search_another")}
         </Link>
       </div>
     </div>

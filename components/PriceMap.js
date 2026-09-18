@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { formatPrice } from "@/lib/format";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const LEVEL_COLORS = {
   low: "#10b981",
@@ -27,6 +28,7 @@ function FitBounds({ points }) {
 }
 
 export default function PriceMap({ origin, destinations, originCode, date }) {
+  const { t, lang } = useLanguage();
   const points = [origin, ...destinations.map((d) => d.airport)];
 
   return (
@@ -54,7 +56,7 @@ export default function PriceMap({ origin, destinations, originCode, date }) {
         </Tooltip>
         <Popup>
           <p className="font-semibold text-slate-900">{origin.city}</p>
-          <p className="text-xs text-slate-500">Origen seleccionado</p>
+          <p className="text-xs text-slate-500">{t("map_selected_origin")}</p>
         </Popup>
       </CircleMarker>
 
@@ -83,15 +85,15 @@ export default function PriceMap({ origin, destinations, originCode, date }) {
               <p className="font-semibold text-slate-900">{airport.city}</p>
               <p className="text-xs text-slate-500">{airport.code}</p>
               {price != null ? (
-                <p className="mt-1 text-lg font-bold text-slate-900">{formatPrice(price)}</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{formatPrice(price, lang)}</p>
               ) : (
-                <p className="mt-1 text-sm text-slate-400">Sin datos</p>
+                <p className="mt-1 text-sm text-slate-400">{t("map_no_data")}</p>
               )}
               <Link
                 href={`/search?tripType=oneway&origin=${originCode}&destination=${airport.code}&departDate=${date}&passengers=1&cabin=economy`}
                 className="mt-2 inline-block text-xs font-semibold text-sky-600 underline"
               >
-                Buscar este vuelo
+                {t("detail_search_this_flight")}
               </Link>
             </div>
           </Popup>

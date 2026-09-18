@@ -4,8 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { buildMonthFareLevels } from "@/lib/fareCalendar";
 import { formatDateShort } from "@/lib/format";
+import { useLanguage } from "@/components/LanguageProvider";
 
-const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
+const WEEKDAYS = { es: ["L", "M", "X", "J", "V", "S", "D"], en: ["M", "T", "W", "T", "F", "S", "S"] };
+const LOCALES = { es: "es-AR", en: "en-US" };
 
 const LEVEL_STYLES = {
   low: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
@@ -30,6 +32,7 @@ export default function FareDatePicker({
   endDate,
   onChange,
 }) {
+  const { t, lang } = useLanguage();
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => {
     const base = startDate ? new Date(`${startDate}T00:00:00`) : new Date();
@@ -107,13 +110,13 @@ export default function FareDatePicker({
   const label =
     mode === "single"
       ? startDate
-        ? formatDateShort(startDate)
-        : "Elegí una fecha"
+        ? formatDateShort(startDate, lang)
+        : t("picker_choose_date")
       : startDate && endDate
-        ? `${formatDateShort(startDate)} — ${formatDateShort(endDate)}`
+        ? `${formatDateShort(startDate, lang)} — ${formatDateShort(endDate, lang)}`
         : startDate
-          ? `${formatDateShort(startDate)} — Elegí vuelta`
-          : "Elegí las fechas";
+          ? `${formatDateShort(startDate, lang)} — ${t("picker_choose_return")}`
+          : t("picker_choose_dates");
 
   return (
     <div className="relative" ref={wrapperRef}>
@@ -134,12 +137,12 @@ export default function FareDatePicker({
               onClick={() => goMonth(-1)}
               disabled={!canGoPrev}
               className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
-              aria-label="Mes anterior"
+              aria-label={t("picker_prev_month")}
             >
               <ChevronLeft size={16} />
             </button>
             <p className="text-sm font-semibold capitalize text-slate-900">
-              {new Date(viewDate.year, viewDate.month).toLocaleDateString("es-AR", {
+              {new Date(viewDate.year, viewDate.month).toLocaleDateString(LOCALES[lang], {
                 month: "long",
                 year: "numeric",
               })}
@@ -148,15 +151,15 @@ export default function FareDatePicker({
               type="button"
               onClick={() => goMonth(1)}
               className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
-              aria-label="Mes siguiente"
+              aria-label={t("picker_next_month")}
             >
               <ChevronRight size={16} />
             </button>
           </div>
 
           <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[11px] text-slate-400">
-            {WEEKDAYS.map((d) => (
-              <span key={d}>{d}</span>
+            {WEEKDAYS[lang].map((d, i) => (
+              <span key={i}>{d}</span>
             ))}
           </div>
 
@@ -202,9 +205,9 @@ export default function FareDatePicker({
           </div>
 
           <div className="mt-3 flex items-center justify-center gap-3 border-t border-slate-100 pt-3 text-[11px] text-slate-500">
-            <Legend color="bg-emerald-100" label="Económico" />
-            <Legend color="bg-amber-100" label="Medio" />
-            <Legend color="bg-rose-100" label="Caro" />
+            <Legend color="bg-emerald-100" label={t("level_low")} />
+            <Legend color="bg-amber-100" label={t("level_mid")} />
+            <Legend color="bg-rose-100" label={t("level_high")} />
           </div>
         </div>
       )}

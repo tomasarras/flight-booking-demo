@@ -6,6 +6,7 @@ import { ArrowLeftRight, Loader2, Minus, Plus, Search } from "lucide-react";
 import { AIRPORTS } from "@/lib/airports";
 import { randomDelay } from "@/lib/delay";
 import FareDatePicker from "@/components/FareDatePicker";
+import { useLanguage } from "@/components/LanguageProvider";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -13,6 +14,7 @@ function todayISO() {
 
 export default function SearchForm({ initial = {} }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [tripType, setTripType] = useState(initial.tripType || "oneway");
   const [origin, setOrigin] = useState(initial.origin || "EZE");
   const [destination, setDestination] = useState(initial.destination || "MDZ");
@@ -20,7 +22,7 @@ export default function SearchForm({ initial = {} }) {
   const [returnDate, setReturnDate] = useState(initial.returnDate || "");
   const [passengers, setPassengers] = useState(Number(initial.passengers) || 1);
   const [cabin, setCabin] = useState(initial.cabin || "economy");
-  const [error, setError] = useState("");
+  const [errorKey, setErrorKey] = useState("");
   const [searching, setSearching] = useState(false);
 
   function swapAirports() {
@@ -31,22 +33,22 @@ export default function SearchForm({ initial = {} }) {
   async function handleSubmit(e) {
     e.preventDefault();
     if (origin === destination) {
-      setError("El origen y el destino no pueden ser el mismo aeropuerto.");
+      setErrorKey("form_error_same_airport");
       return;
     }
     if (!departDate) {
-      setError("Elegí la fecha de ida.");
+      setErrorKey("form_error_no_depart");
       return;
     }
     if (tripType === "roundtrip" && !returnDate) {
-      setError("Elegí la fecha de vuelta.");
+      setErrorKey("form_error_no_return");
       return;
     }
     if (tripType === "roundtrip" && returnDate < departDate) {
-      setError("La fecha de vuelta no puede ser anterior a la de ida.");
+      setErrorKey("form_error_return_before_depart");
       return;
     }
-    setError("");
+    setErrorKey("");
 
     setSearching(true);
     await randomDelay();
@@ -72,8 +74,8 @@ export default function SearchForm({ initial = {} }) {
     >
       <div className="flex gap-4 mb-4 text-sm font-medium">
         {[
-          { value: "oneway", label: "Solo ida" },
-          { value: "roundtrip", label: "Ida y vuelta" },
+          { value: "oneway", label: t("form_oneway") },
+          { value: "roundtrip", label: t("form_roundtrip") },
         ].map((opt) => (
           <label
             key={opt.value}
@@ -98,7 +100,7 @@ export default function SearchForm({ initial = {} }) {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
         <div className="md:col-span-4">
-          <label className="block text-xs font-medium text-slate-500 mb-1">Origen</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">{t("form_origin")}</label>
           <select
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
@@ -116,7 +118,7 @@ export default function SearchForm({ initial = {} }) {
           <button
             type="button"
             onClick={swapAirports}
-            aria-label="Intercambiar origen y destino"
+            aria-label={t("form_swap")}
             className="rounded-full border border-slate-200 p-2 text-slate-500 hover:bg-slate-50 hover:text-sky-600"
           >
             <ArrowLeftRight size={16} />
@@ -124,7 +126,7 @@ export default function SearchForm({ initial = {} }) {
         </div>
 
         <div className="md:col-span-4">
-          <label className="block text-xs font-medium text-slate-500 mb-1">Destino</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">{t("form_destination")}</label>
           <select
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
@@ -139,26 +141,24 @@ export default function SearchForm({ initial = {} }) {
         </div>
 
         <div className="md:col-span-3">
-          <label className="block text-xs font-medium text-slate-500 mb-1">Pasajeros</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">{t("form_passengers")}</label>
           <div className="flex items-center justify-between rounded-lg border border-slate-200 px-2 py-1.5">
             <button
               type="button"
               onClick={() => setPassengers((p) => Math.max(1, p - 1))}
               className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
               disabled={passengers <= 1}
-              aria-label="Menos pasajeros"
+              aria-label={t("form_fewer_passengers")}
             >
               <Minus size={14} />
             </button>
-            <span className="text-sm font-medium">
-              {passengers} {passengers === 1 ? "pasajero" : "pasajeros"}
-            </span>
+            <span className="text-sm font-medium">{t("form_passenger_count", passengers)}</span>
             <button
               type="button"
               onClick={() => setPassengers((p) => Math.min(6, p + 1))}
               className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
               disabled={passengers >= 6}
-              aria-label="Más pasajeros"
+              aria-label={t("form_more_passengers")}
             >
               <Plus size={14} />
             </button>
@@ -167,7 +167,7 @@ export default function SearchForm({ initial = {} }) {
 
         <div className="md:col-span-8">
           <label className="block text-xs font-medium text-slate-500 mb-1">
-            {tripType === "roundtrip" ? "Fechas de ida y vuelta" : "Fecha de ida"}
+            {tripType === "roundtrip" ? t("form_roundtrip_dates") : t("form_depart_date")}
           </label>
           <FareDatePicker
             mode={tripType === "roundtrip" ? "range" : "single"}
@@ -183,19 +183,19 @@ export default function SearchForm({ initial = {} }) {
         </div>
 
         <div className="md:col-span-4">
-          <label className="block text-xs font-medium text-slate-500 mb-1">Clase</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">{t("form_cabin")}</label>
           <select
             value={cabin}
             onChange={(e) => setCabin(e.target.value)}
             className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
           >
-            <option value="economy">Económica</option>
-            <option value="business">Business</option>
+            <option value="economy">{t("form_economy")}</option>
+            <option value="business">{t("form_business")}</option>
           </select>
         </div>
       </div>
 
-      {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
+      {errorKey && <p className="mt-3 text-sm text-rose-600">{t(errorKey)}</p>}
 
       <button
         type="submit"
@@ -205,12 +205,12 @@ export default function SearchForm({ initial = {} }) {
         {searching ? (
           <>
             <Loader2 size={16} className="animate-spin" />
-            Buscando…
+            {t("form_searching")}
           </>
         ) : (
           <>
             <Search size={16} />
-            Buscar vuelos
+            {t("form_search")}
           </>
         )}
       </button>

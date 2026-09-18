@@ -6,12 +6,13 @@ import { Loader2, Luggage, PlaneTakeoff } from "lucide-react";
 import { findAirline } from "@/lib/airlines";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { randomDelay } from "@/lib/delay";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function FlightCard({ flight, selected, onSelect }) {
+  const { t, lang } = useLanguage();
   const [selecting, setSelecting] = useState(false);
   const airline = findAirline(flight.airlineId);
-  const stopsLabel =
-    flight.stops === 0 ? "Directo" : `${flight.stops} escala${flight.stops > 1 ? "s" : ""}`;
+  const stopsLabel = flight.stops === 0 ? t("flight_direct") : t("flight_stops", flight.stops);
 
   async function handleSelect() {
     setSelecting(true);
@@ -37,7 +38,7 @@ export default function FlightCard({ flight, selected, onSelect }) {
           <div>
             <p className="text-sm font-medium text-slate-900">{airline.name}</p>
             <p className="text-xs text-slate-400">
-              Vuelo {flight.flightNumber} · {flight.aircraft}
+              {t("flight_number")} {flight.flightNumber} · {flight.aircraft}
             </p>
           </div>
         </div>
@@ -60,8 +61,8 @@ export default function FlightCard({ flight, selected, onSelect }) {
 
         <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
           <div className="text-right">
-            <p className="text-xl font-bold text-slate-900">{formatPrice(flight.price)}</p>
-            <p className="text-xs text-slate-400">por pasajero</p>
+            <p className="text-xl font-bold text-slate-900">{formatPrice(flight.price, lang)}</p>
+            <p className="text-xs text-slate-400">{t("flight_per_passenger")}</p>
           </div>
         </div>
       </div>
@@ -70,16 +71,16 @@ export default function FlightCard({ flight, selected, onSelect }) {
         <div className="flex items-center gap-4 text-xs text-slate-400">
           <span className="flex items-center gap-1">
             <Luggage size={14} />
-            1 equipaje de mano incluido
+            {t("flight_carry_on")}
           </span>
-          <span>{flight.seatsAvailable} asientos disponibles</span>
+          <span>{t("flight_seats_available", flight.seatsAvailable)}</span>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href={`/flights/${flight.id}`}
             className="text-xs font-medium text-slate-500 underline-offset-2 hover:text-sky-600 hover:underline"
           >
-            Ver detalle
+            {t("flight_view_detail")}
           </Link>
           <button
             type="button"
@@ -92,7 +93,7 @@ export default function FlightCard({ flight, selected, onSelect }) {
             }`}
           >
             {selecting && <Loader2 size={14} className="animate-spin" />}
-            {selecting ? "Seleccionando…" : selected ? "Seleccionado" : "Seleccionar"}
+            {selecting ? t("flight_selecting") : selected ? t("flight_selected") : t("flight_select")}
           </button>
         </div>
       </div>

@@ -11,6 +11,7 @@ import { generateFlights } from "@/lib/flights";
 import { airportLabel } from "@/lib/airports";
 import { formatDateLong, formatPrice } from "@/lib/format";
 import { randomDelay } from "@/lib/delay";
+import { useLanguage } from "@/components/LanguageProvider";
 
 function applyFilters(flights, filters) {
   let list = flights.filter((f) => {
@@ -36,6 +37,7 @@ function defaultFilters() {
 export default function SearchResults() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, lang } = useLanguage();
 
   const tripType = searchParams.get("tripType") || "oneway";
   const origin = searchParams.get("origin") || "";
@@ -99,9 +101,9 @@ export default function SearchResults() {
   if (!origin || !destination || !departDate) {
     return (
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 text-center text-slate-500">
-        Faltan datos de búsqueda.{" "}
+        {t("results_missing_search")}{" "}
         <Link href="/" className="text-sky-600 underline">
-          Volver al inicio
+          {t("common_back_to_home")}
         </Link>
       </div>
     );
@@ -115,10 +117,10 @@ export default function SearchResults() {
             {airportLabel(origin)} → {airportLabel(destination)}
           </span>
           <span className="mx-2 text-slate-300">·</span>
-          {formatDateLong(departDate)}
-          {returnDate && <> — {formatDateLong(returnDate)}</>}
+          {formatDateLong(departDate, lang)}
+          {returnDate && <> — {formatDateLong(returnDate, lang)}</>}
           <span className="mx-2 text-slate-300">·</span>
-          {passengers} {passengers === 1 ? "pasajero" : "pasajeros"}
+          {t("form_passenger_count", passengers)}
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -127,14 +129,14 @@ export default function SearchResults() {
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 sm:hidden"
           >
             <SlidersHorizontal size={14} />
-            Filtros
+            {t("results_mobile_filters")}
           </button>
           <button
             type="button"
             onClick={() => setShowModify((v) => !v)}
             className="text-sm font-medium text-sky-600 hover:underline"
           >
-            {showModify ? "Ocultar" : "Modificar búsqueda"}
+            {showModify ? t("results_hide") : t("results_modify_search")}
           </button>
         </div>
       </div>
@@ -154,18 +156,20 @@ export default function SearchResults() {
 
         <div className="flex-1 space-y-8">
           <FlightSection
-            title={`Vuelos de ida · ${airportLabel(origin)} → ${airportLabel(destination)}`}
+            title={`${t("results_outbound")} · ${airportLabel(origin)} → ${airportLabel(destination)}`}
             flights={filteredOutbound}
             selectedId={selectedOut}
             onSelect={setSelectedOut}
+            noMatchLabel={t("results_no_match")}
           />
 
           {tripType === "roundtrip" && (
             <FlightSection
-              title={`Vuelos de vuelta · ${airportLabel(destination)} → ${airportLabel(origin)}`}
+              title={`${t("results_return")} · ${airportLabel(destination)} → ${airportLabel(origin)}`}
               flights={filteredReturn}
               selectedId={selectedIn}
               onSelect={setSelectedIn}
+              noMatchLabel={t("results_no_match")}
             />
           )}
         </div>
@@ -175,9 +179,9 @@ export default function SearchResults() {
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-3">
             <div className="text-sm text-slate-600">
-              Total estimado{" "}
-              <span className="text-lg font-bold text-slate-900">{formatPrice(totalPrice)}</span>{" "}
-              <span className="text-slate-400">({passengers} pasajero{passengers > 1 ? "s" : ""})</span>
+              {t("results_estimated_total")}{" "}
+              <span className="text-lg font-bold text-slate-900">{formatPrice(totalPrice, lang)}</span>{" "}
+              <span className="text-slate-400">({t("summary_passenger_count", passengers)})</span>
             </div>
             <button
               type="button"
@@ -186,7 +190,7 @@ export default function SearchResults() {
               className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {continuing && <Loader2 size={14} className="animate-spin" />}
-              {continuing ? "Confirmando…" : "Continuar"}
+              {continuing ? t("results_confirming") : t("results_continue")}
             </button>
           </div>
         </div>
@@ -195,13 +199,13 @@ export default function SearchResults() {
   );
 }
 
-function FlightSection({ title, flights, selectedId, onSelect }) {
+function FlightSection({ title, flights, selectedId, onSelect, noMatchLabel }) {
   return (
     <div>
       <h2 className="mb-3 text-sm font-semibold text-slate-900">{title}</h2>
       {flights.length === 0 ? (
         <p className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-400">
-          No hay vuelos que coincidan con los filtros seleccionados.
+          {noMatchLabel}
         </p>
       ) : (
         <div className="space-y-3">

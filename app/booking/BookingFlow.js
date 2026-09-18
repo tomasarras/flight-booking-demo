@@ -13,8 +13,7 @@ import { randomDelay } from "@/lib/delay";
 import StepIndicator from "@/components/StepIndicator";
 import PassengerForm from "@/components/PassengerForm";
 import SeatMap from "@/components/SeatMap";
-
-const STEPS = ["Pasajeros", "Asientos", "Pago"];
+import { useLanguage } from "@/components/LanguageProvider";
 
 function emptyPassenger() {
   return { firstName: "", lastName: "", document: "", birthDate: "", email: "" };
@@ -23,6 +22,8 @@ function emptyPassenger() {
 export default function BookingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, lang } = useLanguage();
+  const STEPS = [t("step_passengers"), t("step_seats"), t("step_pay")];
 
   const outId = searchParams.get("out");
   const inId = searchParams.get("in");
@@ -40,7 +41,7 @@ export default function BookingFlow() {
   const [seatsIn, setSeatsIn] = useState([]);
   const [payment, setPayment] = useState({ name: "", number: "", expiry: "", cvv: "" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [error, setError] = useState("");
+  const [errorKey, setErrorKey] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const seatMapOut = useMemo(() => (outFlight ? generateSeatMap(outFlight.id) : []), [outFlight]);
@@ -49,9 +50,9 @@ export default function BookingFlow() {
   if (!outFlight) {
     return (
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center text-slate-500">
-        No encontramos ese vuelo.{" "}
+        {t("detail_not_found")}{" "}
         <Link href="/" className="text-sky-600 underline">
-          Volver a buscar
+          {t("common_search_flights")}
         </Link>
       </div>
     );
@@ -74,10 +75,10 @@ export default function BookingFlow() {
       (p) => !p.firstName || !p.lastName || !p.document || !p.birthDate
     );
     if (incomplete || !passengers[0].email) {
-      setError("Completá todos los campos de cada pasajero.");
+      setErrorKey("booking_error_passenger_fields");
       return;
     }
-    setError("");
+    setErrorKey("");
     setSubmitting(true);
     await randomDelay();
     setSubmitting(false);
@@ -86,10 +87,10 @@ export default function BookingFlow() {
 
   async function goToStep3() {
     if (seatsOut.length < passengerCount || (inFlight && seatsIn.length < passengerCount)) {
-      setError("Seleccioná un asiento por pasajero en cada tramo.");
+      setErrorKey("booking_error_seats");
       return;
     }
-    setError("");
+    setErrorKey("");
     setSubmitting(true);
     await randomDelay();
     setSubmitting(false);
@@ -99,14 +100,14 @@ export default function BookingFlow() {
   async function confirmBooking(e) {
     e.preventDefault();
     if (!payment.name || !payment.number || !payment.expiry || !payment.cvv) {
-      setError("Completá los datos de pago simulados.");
+      setErrorKey("booking_error_payment");
       return;
     }
     if (!acceptedTerms) {
-      setError("Tenés que aceptar que esta es una reserva simulada.");
+      setErrorKey("booking_error_terms");
       return;
     }
-    setError("");
+    setErrorKey("");
     setSubmitting(true);
     await randomDelay();
 
@@ -141,7 +142,7 @@ export default function BookingFlow() {
                   onChange={(value) => updatePassenger(idx, value)}
                 />
               ))}
-              {error && <p className="text-sm text-rose-600">{error}</p>}
+              {errorKey && <p className="text-sm text-rose-600">{t(errorKey)}</p>}
               <button
                 type="button"
                 onClick={goToStep2}
@@ -149,7 +150,7 @@ export default function BookingFlow() {
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:px-8"
               >
                 {submitting && <Loader2 size={14} className="animate-spin" />}
-                Continuar a selección de asientos
+                {t("booking_continue_seats")}
               </button>
             </div>
           )}
@@ -158,7 +159,8 @@ export default function BookingFlow() {
             <div className="space-y-6">
               <div>
                 <h3 className="mb-2 text-sm font-semibold text-slate-900">
-                  Ida · {airportLabel(outFlight.originCode)} → {airportLabel(outFlight.destinationCode)}
+                  {t("seatmap_outbound")} · {airportLabel(outFlight.originCode)} →{" "}
+                  {airportLabel(outFlight.destinationCode)}
                 </h3>
                 <SeatMap
                   seats={seatMapOut}
@@ -171,7 +173,8 @@ export default function BookingFlow() {
               {inFlight && (
                 <div>
                   <h3 className="mb-2 text-sm font-semibold text-slate-900">
-                    Vuelta · {airportLabel(inFlight.originCode)} → {airportLabel(inFlight.destinationCode)}
+                    {t("seatmap_return")} · {airportLabel(inFlight.originCode)} →{" "}
+                    {airportLabel(inFlight.destinationCode)}
                   </h3>
                   <SeatMap
                     seats={seatMapIn}
@@ -182,7 +185,7 @@ export default function BookingFlow() {
                 </div>
               )}
 
-              {error && <p className="text-sm text-rose-600">{error}</p>}
+              {errorKey && <p className="text-sm text-rose-600">{t(errorKey)}</p>}
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -190,7 +193,7 @@ export default function BookingFlow() {
                   disabled={submitting}
                   className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Atrás
+                  {t("common_back_button")}
                 </button>
                 <button
                   type="button"
@@ -199,7 +202,7 @@ export default function BookingFlow() {
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70 sm:flex-none sm:px-8"
                 >
                   {submitting && <Loader2 size={14} className="animate-spin" />}
-                  Continuar al pago
+                  {t("common_continue_to_payment")}
                 </button>
               </div>
             </div>
@@ -209,15 +212,14 @@ export default function BookingFlow() {
             <form onSubmit={confirmBooking} className="space-y-4">
               <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
                 <ShieldAlert size={16} className="mt-0.5 shrink-0" />
-                Este es un pago simulado para una demo de portfolio. No ingreses datos reales
-                de tu tarjeta.
+                {t("payment_disclaimer")}
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-slate-500 mb-1">
-                      Nombre en la tarjeta
+                      {t("payment_card_name")}
                     </label>
                     <input
                       type="text"
@@ -228,7 +230,7 @@ export default function BookingFlow() {
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-slate-500 mb-1">
-                      Número (simulado)
+                      {t("payment_card_number")}
                     </label>
                     <input
                       type="text"
@@ -241,7 +243,9 @@ export default function BookingFlow() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Vencimiento</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">
+                      {t("payment_expiry")}
+                    </label>
                     <input
                       type="text"
                       placeholder="MM/AA"
@@ -252,7 +256,7 @@ export default function BookingFlow() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">CVV</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t("payment_cvv")}</label>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -272,11 +276,10 @@ export default function BookingFlow() {
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
                   className="mt-0.5 accent-sky-600"
                 />
-                Entiendo que esta es una reserva y un pago simulados, sin validez real, creados
-                solo para una demo de portfolio.
+                {t("payment_terms")}
               </label>
 
-              {error && <p className="text-sm text-rose-600">{error}</p>}
+              {errorKey && <p className="text-sm text-rose-600">{t(errorKey)}</p>}
 
               <div className="flex gap-3">
                 <button
@@ -285,7 +288,7 @@ export default function BookingFlow() {
                   disabled={submitting}
                   className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Atrás
+                  {t("common_back_button")}
                 </button>
                 <button
                   type="submit"
@@ -293,7 +296,7 @@ export default function BookingFlow() {
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70 sm:flex-none sm:px-8"
                 >
                   {submitting ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
-                  {submitting ? "Confirmando…" : "Confirmar reserva simulada"}
+                  {submitting ? t("results_confirming") : t("booking_confirm")}
                 </button>
               </div>
             </form>
@@ -302,16 +305,18 @@ export default function BookingFlow() {
 
         <aside className="w-full shrink-0 space-y-4 lg:w-80">
           <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Resumen</p>
-            <SummaryFlight flight={outFlight} label="Ida" />
-            {inFlight && <SummaryFlight flight={inFlight} label="Vuelta" />}
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+              {t("summary_title")}
+            </p>
+            <SummaryFlight flight={outFlight} label={t("seatmap_outbound")} />
+            {inFlight && <SummaryFlight flight={inFlight} label={t("seatmap_return")} />}
             <div className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-500">
-              {passengerCount} pasajero{passengerCount > 1 ? "s" : ""} · Clase{" "}
-              {cabin === "business" ? "Business" : "Económica"}
+              {t("summary_passenger_count", passengerCount)} · {t("summary_class")}{" "}
+              {cabin === "business" ? t("form_business") : t("form_economy")}
             </div>
             <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-              <span className="text-sm font-medium text-slate-600">Total</span>
-              <span className="text-xl font-bold text-slate-900">{formatPrice(totalPrice)}</span>
+              <span className="text-sm font-medium text-slate-600">{t("summary_total")}</span>
+              <span className="text-xl font-bold text-slate-900">{formatPrice(totalPrice, lang)}</span>
             </div>
           </div>
         </aside>
